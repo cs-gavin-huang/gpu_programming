@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:26:38
- * @LastEditTime: 2021-01-07 00:32:54
+ * @LastEditTime: 2021-01-07 00:34:02
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_in_one_week/08-抗锯齿/rtweekend.hpp
@@ -39,6 +39,12 @@ inline double random_double() {
 inline double random_double(double min, double max) {
     // Returns a random real in [min,max).
     return min + (max-min)*random_double();
+}
+
+inline double clamp(double x, double min, double max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
 }
 
 // Common Headers
