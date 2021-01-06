@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-06 23:52:03
- * @LastEditTime: 2021-01-07 00:47:09
+ * @LastEditTime: 2021-01-07 00:48:07
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_in_one_week/09-散射材料/color.hpp
@@ -17,12 +17,6 @@ void write_color(std::ostream &out, color pixel_color, int samples_per_pixel) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();
-
-    // Divide the color by the number of samples.
-    auto scale = 1.0 / samples_per_pixel;
-    r *= scale;
-    g *= scale;
-    b *= scale;
 
     // Divide the color by the number of samples and gamma-correct for gamma=2.0. 提亮操作
     auto scale = 1.0 / samples_per_pixel;
