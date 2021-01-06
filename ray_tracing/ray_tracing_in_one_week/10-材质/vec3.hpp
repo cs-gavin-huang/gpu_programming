@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-06 23:51:17
- * @LastEditTime: 2021-01-07 00:58:56
+ * @LastEditTime: 2021-01-07 01:09:25
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_in_one_week/09-散射材料/vec3.hpp
+ * @FilePath: /ray_tracing/ray_tracing_in_one_week/10-材质/vec3.hpp
  */
 #ifndef VEC3_H
 #define VEC3_H
@@ -61,6 +61,11 @@ class vec3 {
             return vec3(random_double(min,max), random_double(min,max), random_double(min,max));
         }
 
+        bool near_zero() const {
+            // Return true if the vector is close to zero in all dimensions.
+            const auto s = 1e-8;
+            return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+        }        
     public:
         double e[3];
 };
@@ -134,6 +139,10 @@ inline vec3 random_in_hemisphere(const vec3& normal) {
         return in_unit_sphere;
     else
         return -in_unit_sphere;
+}
+
+inline vec3 reflect(const vec3& v, const vec3& n) {
+    return v - 2*dot(v,n)*n;
 }
 #endif
 
