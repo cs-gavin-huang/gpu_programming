@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-06 23:51:17
- * @LastEditTime: 2021-01-07 01:09:25
+ * @LastEditTime: 2021-01-07 01:20:45
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_in_one_week/10-材质/vec3.hpp
+ * @FilePath: /ray_tracing/ray_tracing_in_one_week/11-折射效果/vec3.hpp
  */
 #ifndef VEC3_H
 #define VEC3_H
@@ -143,6 +143,13 @@ inline vec3 random_in_hemisphere(const vec3& normal) {
 
 inline vec3 reflect(const vec3& v, const vec3& n) {
     return v - 2*dot(v,n)*n;
+}
+
+inline vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
+    auto cos_theta = fmin(dot(-uv, n), 1.0);
+    vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
+    vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
 }
 #endif
 
