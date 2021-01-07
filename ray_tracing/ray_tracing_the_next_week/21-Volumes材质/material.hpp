@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 01:01:29
- * @LastEditTime: 2021-01-07 15:33:11
+ * @LastEditTime: 2021-01-07 16:01:38
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_the_next_week/19-正方体材质（光照添加）/material.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/21-Volumes材质/material.hpp
  */
 #ifndef MATERIAL_H
 #define MATERIAL_H
@@ -124,4 +124,20 @@ class diffuse_light : public material  {
         shared_ptr<texture> emit;
 };
 
+class isotropic : public material {
+    public:
+        isotropic(color c) : albedo(make_shared<solid_color>(c)) {}
+        isotropic(shared_ptr<texture> a) : albedo(a) {}
+
+        virtual bool scatter(
+            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+        ) const override {
+            scattered = ray(rec.p, random_in_unit_sphere(), r_in.time());
+            attenuation = albedo->value(rec.u, rec.v, rec.p);
+            return true;
+        }
+
+    public:
+        shared_ptr<texture> albedo;
+};
 #endif
