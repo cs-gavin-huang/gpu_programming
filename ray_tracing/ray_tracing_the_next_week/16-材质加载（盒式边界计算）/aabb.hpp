@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 14:21:32
- * @LastEditTime: 2021-01-07 14:24:53
+ * @LastEditTime: 2021-01-07 14:46:54
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/aabb.hpp
@@ -21,12 +21,13 @@ class aabb {
 
         bool hit(const ray& r, double t_min, double t_max) const {
             for (int a = 0; a < 3; a++) {
-                auto t0 = fmin((minimum[a] - r.origin()[a]) / r.direction()[a],
-                               (maximum[a] - r.origin()[a]) / r.direction()[a]);
-                auto t1 = fmax((minimum[a] - r.origin()[a]) / r.direction()[a],
-                               (maximum[a] - r.origin()[a]) / r.direction()[a]);
-                t_min = fmax(t0, t_min);
-                t_max = fmin(t1, t_max);
+                auto invD = 1.0f / r.direction()[a];
+                auto t0 = (min()[a] - r.origin()[a]) * invD;
+                auto t1 = (max()[a] - r.origin()[a]) * invD;
+                if (invD < 0.0f)
+                    std::swap(t0, t1);
+                t_min = t0 > t_min ? t0 : t_min;
+                t_max = t1 < t_max ? t1 : t_max;
                 if (t_max <= t_min)
                     return false;
             }
@@ -37,24 +38,7 @@ class aabb {
         point3 maximum;
 };
 
-
-inline bool aabb::hit(const ray& r, double t_min, double t_max) const {
-    for (int a = 0; a < 3; a++) {
-        auto invD = 1.0f / r.direction()[a];
-        auto t0 = (min()[a] - r.origin()[a]) * invD;
-        auto t1 = (max()[a] - r.origin()[a]) * invD;
-        if (invD < 0.0f)
-            std::swap(t0, t1);
-        t_min = t0 > t_min ? t0 : t_min;
-        t_max = t1 < t_max ? t1 : t_max;
-        if (t_max <= t_min)
-            return false;
-    }
-    return true;
-}
-
-
-inline aabb surrounding_box(aabb box0, aabb box1) {
+aabb surrounding_box(aabb box0, aabb box1) {
     point3 small(fmin(box0.min().x(), box1.min().x()),
                  fmin(box0.min().y(), box1.min().y()),
                  fmin(box0.min().z(), box1.min().z()));

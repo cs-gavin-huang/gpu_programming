@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 01:51:51
- * @LastEditTime: 2021-01-07 14:23:39
+ * @LastEditTime: 2021-01-07 14:51:36
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/moving_sphere.hpp
@@ -26,6 +26,8 @@ class moving_sphere : public hittable {
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
 
         point3 center(double time) const;
+
+        virtual bool bounding_box(double _time0, double _time1, aabb& output_box) const override;
 
     public:
         point3 center0, center1;

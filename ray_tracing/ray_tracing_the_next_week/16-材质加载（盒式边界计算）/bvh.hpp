@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 14:25:34
- * @LastEditTime: 2021-01-07 14:27:59
+ * @LastEditTime: 2021-01-07 14:45:39
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/bvh.hpp

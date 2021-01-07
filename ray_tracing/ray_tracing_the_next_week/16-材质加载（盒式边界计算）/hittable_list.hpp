@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:25:08
- * @LastEditTime: 2021-01-07 14:24:22
+ * @LastEditTime: 2021-01-07 14:38:32
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/hittable_list.hpp
@@ -27,7 +27,9 @@ class hittable_list : public hittable {
 
         virtual bool hit(
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
-
+        
+        virtual bool bounding_box(
+            double time0, double time1, aabb& output_box) const override;
     public:
         std::vector<shared_ptr<hittable>> objects;
 };

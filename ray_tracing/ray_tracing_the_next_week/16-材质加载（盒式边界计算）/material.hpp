@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 01:01:29
- * @LastEditTime: 2021-01-07 14:31:11
+ * @LastEditTime: 2021-01-07 14:44:27
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/material.hpp
@@ -10,7 +10,7 @@
 #define MATERIAL_H
 
 #include "rtweekend.hpp"
-
+#include "texture.hpp"
 struct hit_record;
 
 class material {
