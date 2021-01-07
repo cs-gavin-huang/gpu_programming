@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:22:03
- * @LastEditTime: 2021-01-07 14:23:58
+ * @LastEditTime: 2021-01-07 14:29:04
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/hittable.hpp
@@ -19,6 +19,8 @@ struct hit_record {
     vec3 normal;
     shared_ptr<material> mat_ptr;
     double t;
+    double u;
+    double v;
     bool front_face;
 
     inline void set_face_normal(const ray& r, const vec3& outward_normal) {

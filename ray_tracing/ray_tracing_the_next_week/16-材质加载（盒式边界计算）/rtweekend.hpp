@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:26:38
- * @LastEditTime: 2021-01-07 00:34:02
+ * @LastEditTime: 2021-01-07 14:27:39
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_in_one_week/08-抗锯齿/rtweekend.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/rtweekend.hpp
  */
 #ifndef RTWEEKEND_H
 #define RTWEEKEND_H
@@ -45,6 +45,12 @@ inline double clamp(double x, double min, double max) {
     if (x < min) return min;
     if (x > max) return max;
     return x;
+}
+
+
+inline int random_int(int min, int max) {
+    // Returns a random integer in [min,max].
+    return static_cast<int>(random_double(min, max+1));
 }
 
 // Common Headers
