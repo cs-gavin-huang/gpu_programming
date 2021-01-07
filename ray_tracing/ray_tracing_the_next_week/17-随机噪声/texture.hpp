@@ -1,16 +1,16 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 14:28:34
- * @LastEditTime: 2021-01-07 14:31:32
+ * @LastEditTime: 2021-01-07 14:59:41
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/texture.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/17-随机噪声/texture.hpp
  */
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
 #include "rtweekend.hpp"
-
+#include "perlin.hpp"
 class texture {
     public:
         virtual color value(double u, double v, const point3& p) const = 0;
@@ -54,5 +54,17 @@ class checker_texture : public texture {
     public:
         shared_ptr<texture> odd;
         shared_ptr<texture> even;
+};
+
+class noise_texture : public texture {
+    public:
+        noise_texture() {}
+
+        virtual color value(double u, double v, const point3& p) const override {
+            return color(1,1,1) * noise.noise(p);
+        }
+
+    public:
+        perlin noise;
 };
 #endif

@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-06 23:55:02
- * @LastEditTime: 2021-01-07 14:54:16
+ * @LastEditTime: 2021-01-07 15:01:07
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/main.cc
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/17-随机噪声/main.cc
  */
 //inclue 结构发生变化
 #include "rtweekend.hpp"
@@ -27,6 +27,18 @@ hittable_list two_spheres() {
 
     return objects;
 }
+
+//实验场景 随机噪声纹理
+hittable_list two_perlin_spheres() {
+    hittable_list objects;
+
+    auto pertext = make_shared<noise_texture>();
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+
+    return objects;
+}
+
 
 hittable_list random_scene() {
     hittable_list world;
@@ -127,9 +139,17 @@ int main() {
             aperture = 0.1;
             break;
 
-        default:
+
         case 2:
             world = two_spheres();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+
+        default:
+        case3:
+            world = two_perlin_spheres();
             lookfrom = point3(13,2,3);
             lookat = point3(0,0,0);
             vfov = 20.0;
