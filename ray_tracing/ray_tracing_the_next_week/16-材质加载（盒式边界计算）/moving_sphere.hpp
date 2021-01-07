@@ -1,16 +1,16 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 01:51:51
- * @LastEditTime: 2021-01-07 01:53:49
+ * @LastEditTime: 2021-01-07 14:23:39
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_the_next_week/15-动态模糊/moving_sphere.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/moving_sphere.hpp
  */
 #ifndef MOVING_SPHERE_H
 #define MOVING_SPHERE_H
 
 #include "rtweekend.hpp"
-
+#include "aabb.hpp"
 #include "hittable.hpp"
 
 
@@ -62,6 +62,18 @@ bool moving_sphere::hit(const ray& r, double t_min, double t_max, hit_record& re
     rec.set_face_normal(r, outward_normal);
     rec.mat_ptr = mat_ptr;
 
+    return true;
+}
+
+//边界盒
+bool moving_sphere::bounding_box(double _time0, double _time1, aabb& output_box) const {
+    aabb box0(
+        center(_time0) - vec3(radius, radius, radius),
+        center(_time0) + vec3(radius, radius, radius));
+    aabb box1(
+        center(_time1) - vec3(radius, radius, radius),
+        center(_time1) + vec3(radius, radius, radius));
+    output_box = surrounding_box(box0, box1);
     return true;
 }
 

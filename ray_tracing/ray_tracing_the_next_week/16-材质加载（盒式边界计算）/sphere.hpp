@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:22:34
- * @LastEditTime: 2021-01-07 01:04:12
+ * @LastEditTime: 2021-01-07 14:23:08
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_in_one_week/10-材质/sphere.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/sphere.hpp
  */
 #ifndef SPHERE_H
 #define SPHERE_H
@@ -20,6 +20,9 @@ class sphere : public hittable {
 
         virtual bool hit(
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
+        
+        virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
+
 
     public:
         point3 center;
@@ -51,6 +54,13 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
     rec.set_face_normal(r, outward_normal);
     rec.mat_ptr = mat_ptr;
 
+    return true;
+}
+
+bool sphere::bounding_box(double time0, double time1, aabb& output_box) const {
+    output_box = aabb(
+        center - vec3(radius, radius, radius),
+        center + vec3(radius, radius, radius));
     return true;
 }
 

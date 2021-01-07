@@ -1,16 +1,16 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:25:08
- * @LastEditTime: 2021-01-07 00:25:08
+ * @LastEditTime: 2021-01-07 14:24:22
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_in_one_week/07-多个球体功能（ground）/hittable_list.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/hittable_list.hpp
  */
 #ifndef HITTABLE_LIST_H
 #define HITTABLE_LIST_H
 
 #include "hittable.hpp"
-
+#include "aabb.hpp"
 #include <memory>
 #include <vector>
 
@@ -46,6 +46,22 @@ bool hittable_list::hit(const ray& r, double t_min, double t_max, hit_record& re
     }
 
     return hit_anything;
+}
+
+//边界盒
+bool hittable_list::bounding_box(double time0, double time1, aabb& output_box) const {
+    if (objects.empty()) return false;
+
+    aabb temp_box;
+    bool first_box = true;
+
+    for (const auto& object : objects) {
+        if (!object->bounding_box(time0, time1, temp_box)) return false;
+        output_box = first_box ? temp_box : surrounding_box(output_box, temp_box);
+        first_box = false;
+    }
+
+    return true;
 }
 
 #endif
