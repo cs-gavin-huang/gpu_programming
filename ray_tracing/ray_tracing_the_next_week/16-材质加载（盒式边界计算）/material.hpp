@@ -1,10 +1,10 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 01:01:29
- * @LastEditTime: 2021-01-07 01:55:21
+ * @LastEditTime: 2021-01-07 14:31:11
  * @LastEditors: your name
  * @Description: 
- * @FilePath: /ray_tracing/ray_tracing_the_next_week/15-动态模糊/material.hpp
+ * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/material.hpp
  */
 #ifndef MATERIAL_H
 #define MATERIAL_H
@@ -22,7 +22,8 @@ class material {
 
 class lambertian : public material {
     public:
-        lambertian(const color& a) : albedo(a) {}
+        lambertian(const color& a) : albedo(make_shared<solid_color>(a)) {}
+        lambertian(shared_ptr<texture> a) : albedo(a) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -34,12 +35,12 @@ class lambertian : public material {
                 scatter_direction = rec.normal;
             
             scattered = ray(rec.p, scatter_direction, r_in.time());
-            attenuation = albedo;
+            attenuation = albedo->value(rec.u, rec.v, rec.p);
             return true;
         }
 
     public:
-        color albedo;
+        shared_ptr<texture> albedo;
 };
 
 class metal : public material {
