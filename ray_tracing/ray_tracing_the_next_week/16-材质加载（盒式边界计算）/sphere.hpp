@@ -1,7 +1,7 @@
 /*
  * @Author: geekli
  * @Date: 2021-01-07 00:22:34
- * @LastEditTime: 2021-01-07 14:29:35
+ * @LastEditTime: 2021-01-07 14:30:11
  * @LastEditors: your name
  * @Description: 
  * @FilePath: /ray_tracing/ray_tracing_the_next_week/16-材质加载（盒式边界计算）/sphere.hpp
@@ -68,6 +68,7 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
     rec.p = r.at(rec.t);
     vec3 outward_normal = (rec.p - center) / radius;
     rec.set_face_normal(r, outward_normal);
+    get_sphere_uv(outward_normal, rec.u, rec.v);
     rec.mat_ptr = mat_ptr;
 
     return true;
