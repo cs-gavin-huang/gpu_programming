@@ -783,7 +783,7 @@ int main() {
 
 得到一张使用法向作为球体颜色值的图片。
 
-![image-20210109002710831](/Users/code/Library/Application Support/typora-user-images/image-20210109002710831.png)
+[![sKXE6J.png](https://s3.ax1x.com/2021/01/09/sKXE6J.png)](https://imgchr.com/i/sKXE6J)
 
 
 
