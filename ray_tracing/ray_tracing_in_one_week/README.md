@@ -177,7 +177,7 @@ inline vec3 unit_vector(vec3 v) {
 main函数改成这样
 
 ```cpp
-#include "vec3.h"
+#include "vec3.hpp"
 
 #include <iostream>
 
@@ -229,7 +229,7 @@ int main() {
 #ifndef RAY_H
 #define RAY_H
 
-#include "vec3.h"
+#include "vec3.hpp"
 
 class ray {
     public:
@@ -265,7 +265,7 @@ class ray {
 射线r现在只是近似的从各个像素的中心射出
 
 ```cpp
-#include "ray.h"
+#include "ray.hpp"
 
 #include <iostream>
 
@@ -313,7 +313,9 @@ t=1.0时就是蓝色, 而t=0.0时就是白色。
 
 当t从0到1, 会渲染出这样的图像
 
-![img](https://pic3.zhimg.com/80/v2-f16c3bad8439858002670f5ee582789e_720w.jpg)
+
+
+![sKXB9S.png](https://s3.ax1x.com/2021/01/09/sKXB9S.png)
 
 
 
@@ -419,7 +421,7 @@ vec3 ray_color(const ray& r) {
 
 这会得到下面的结果:
 
-![img](https://pic3.zhimg.com/80/v2-7b6105ac601399ee8171da1c3df9cf56_720w.jpg)
+![img](https://s3.ax1x.com/2021/01/09/sKXWNV.png)
 
 
 
@@ -474,11 +476,11 @@ hittable类理应有个接受射线为参数的函数, 许多光线追踪器为�
 hittable抽象类(计算的结果存在的结构体)
 
 ```cpp
-//hittable.h
+//hittable.hpp
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "ray.h"
+#include "ray.hpp"
 
 struct hit_record {
     vec3 p;
@@ -497,12 +499,12 @@ class hittable {
 继承自它的sphere球体类:
 
 ```cpp
-//sphere.h
+//sphere.hpp
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "hittable.h"
-#include "vec3.h"
+#include "hittable.hpp"
+#include "vec3.hpp"
 
 class sphere: public hittable {
     public:
@@ -573,11 +575,11 @@ else {
 在结构体hit_record中加入front_face变量
 
 ```cpp
-//hittable.h 加入时间与面朝向
+//hittable.hpp 加入时间与面朝向
 ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "ray.h"
+#include "ray.hpp"
 
 struct hit_record {
     vec3 p;
@@ -601,7 +603,7 @@ class hittable {
 求交时加入射入面的判别:
 
 ```cpp
-//sphere.h 加入射入面判别
+//sphere.hpp 加入射入面判别
 bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
     vec3 oc = r.origin() - center;
     auto a = r.direction().length_squared();
@@ -635,11 +637,11 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
 加入存放物体的列表
 
 ```cpp
-//hittable_list.h
+//hittable_list.hpp
 #ifndef HITTABLE_LIST_H
 #define HITTABLE_LIST_H
 
-#include "hittable.h"
+#include "hittable.hpp"
 #include <memory>
 #include <vector>
 
@@ -690,7 +692,7 @@ bool hittable_list::hit(const ray& r, double t_min, double t_max, hit_record& re
 在rtweekend.h中给出了一些未来常用的常数和函数:
 
 ```cpp
-//rtweekend.h
+//rtweekend.hpp
 #ifndef RTWEEKEND_H
 #define RTWEEKEND_H
 
@@ -721,8 +723,8 @@ inline double ffmax(double a, double b) { return a >= b ? a : b; }
 
 // Common Headers
 
-#include "ray.h"
-#include "vec3.h"
+#include "ray.hpp"
+#include "vec3.hpp"
 
 #endif
 ```
@@ -731,10 +733,10 @@ inline double ffmax(double a, double b) { return a >= b ? a : b; }
 
 ```cpp
 //main.cc
-#include "rtweekend.h"
+#include "rtweekend.hpp"
 
-#include "hittable_list.h"
-#include "sphere.h"
+#include "hittable_list.hpp"
+#include "sphere.hpp"
 
 #include <iostream>
 vec3 ray_color(const ray& r, const hittable& world) {
@@ -783,7 +785,9 @@ int main() {
 
 得到一张使用法向作为球体颜色值的图片。
 
-[![sKXE6J.png](https://s3.ax1x.com/2021/01/09/sKXE6J.png)](https://imgchr.com/i/sKXE6J)
+
+
+![sKXE6J.png](https://s3.ax1x.com/2021/01/09/sKXE6J.png)
 
 
 
@@ -804,7 +808,7 @@ int main() {
 将下面的一小段代码加到rtweekend.h中, 得到想要的随机函数:
 
 ```cpp
-//rtweekend.h
+//rtweekend.hpp
 #include <cstdlib>
 ...
 
@@ -828,11 +832,11 @@ inline double random_double(double min, double max) {
 简单的轴对齐摄像机类进行了一次封装:
 
 ```cpp
-//camera.h
+//camera.hpp
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "rtweekend.h"
+#include "rtweekend.hpp"
 
 class camera {
     public:
@@ -859,9 +863,9 @@ class camera {
 为了对多重采样的颜色值进行计算, 升级了vec3::write_color()函数。不会在每次发出射线采样时都计算一个0-1之间的颜色值, 而是一次性把所有的颜色都加在一起, 然后最后只需要简单的除以采样点个数。
 
 ```cpp
-//vec3.h
+//vec3.hpp
 ...
-#include "rtweekend.h"
+#include "rtweekend.hpp"
 ...
 void write_color(std::ostream &out, int samples_per_pixel) {
     // Divide the color total by the number of samples.
@@ -880,7 +884,7 @@ void write_color(std::ostream &out, int samples_per_pixel) {
 头文件rtweekend.h加入了一个新函数clamp(x,min,max), 用来将x限制在[min,max]区间之中:
 
 ```cpp
-//rtweekend.h
+//rtweekend.hpp
 inline double clamp(double x, double min, double max) {
     if (x < min) return min;
     if (x > max) return max;
@@ -954,7 +958,7 @@ int main() {
 首先, 在一个xyz取值范围为-1到+1的单位立方体中选取一个随机点, 如果这个点在球外就重新生成直到该点在球内:
 
 ```cpp
-//vec3.h
+//vec3.hpp
 class vec3 {
   public:
     ...
@@ -968,7 +972,7 @@ class vec3 {
 ```
 
 ```cpp
-//vec3.h
+//vec3.hpp
 vec3 random_in_unit_sphere() {
     while (true) {
         auto p = vec3::random(-1,1);
@@ -1064,16 +1068,14 @@ int main() {
 使用"gamma 2"空间, 就意味着最终的颜色值要加上指数 ![[公式]](https://www.zhihu.com/equation?tex=1%2Fgamma) , 在的例子里就是 ½, 即开平方根:
 
 ```cpp
-//vec3.h
+//vec3.hpp
 void write_color(std::ostream &out, int samples_per_pixel) {
-    // Divide the color total by the number of samples and gamma-correct
-    // for a gamma value of 2.0.
+
     auto scale = 1.0 / samples_per_pixel;
     auto r = sqrt(scale * e[0]);
     auto g = sqrt(scale * e[1]);
     auto b = sqrt(scale * e[2]);
 
-    // Write the translated [0,255] value of each color component.
     out << static_cast<int>(256 * clamp(r, 0.0, 0.999)) << ' '
         << static_cast<int>(256 * clamp(g, 0.0, 0.999)) << ' '
         << static_cast<int>(256 * clamp(b, 0.0, 0.999)) << '\n';
@@ -1108,7 +1110,7 @@ if (world.hit(r, 0.001, infinity, rec)) {
 因为选取的是单位球面上的点。可以通过在单位球内选取一个随机点, 然后将其单位化来获得该点。
 
 ```cpp
-//vec3.h
+//vec3.hpp
 vec3 random_unit_vector() {
     auto a = random_double(0, 2*pi);
     auto z = random_double(-1, 1);
@@ -1130,7 +1132,6 @@ vec3 random_unit_vector() {
 vec3 ray_color(const ray& r, const hittable& world, int depth) {
     hit_record rec;
 
-    // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return vec3(0,0,0);
 
@@ -1175,7 +1176,7 @@ vec3 ray_color(const ray& r, const hittable& world, int depth) {
 在使用lambertian漫发射模型前, 早期的光线追踪论文中大部分使用的都是这个方法:
 
 ```cpp
-//vec3.h
+//vec3.hpp
 vec3 random_in_hemisphere(const vec3& normal) {
     vec3 in_unit_sphere = random_in_unit_sphere();
     if (dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
@@ -1188,11 +1189,10 @@ vec3 random_in_hemisphere(const vec3& normal) {
 将的新函数套入ray_color()函数:
 
 ```cpp
-//vec3.h
+//vec3.hpp
 vec3 ray_color(const ray& r, const hittable& world, int depth) {
     hit_record rec;
 
-    // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return vec3(0,0,0);
 
@@ -1225,7 +1225,7 @@ vec3 ray_color(const ray& r, const hittable& world, int depth) {
 下面来看一下这个抽象类:
 
 ```cpp
-//material.h
+//material.hpp
 class material {
     public:
         virtual bool scatter(
@@ -1239,11 +1239,11 @@ class material {
 物体和材质还要能够联系在一起。在C++中只要告诉编译器, 在`hit_record`里面存了个材质的指针。
 
 ```cpp
-//hittable.h
+//hittable.hpp
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "rtweekend.h"
+#include "rtweekend.hpp"
 
 class material;
 
@@ -1335,7 +1335,7 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
 可以写出Lambertian的材质类:
 
 ```cpp
-//material.h
+//material.hpp
 class lambertian : public material {
     public:
         lambertian(const vec3& a) : albedo(a) {}
@@ -1367,7 +1367,7 @@ class lambertian : public material {
 反射方向的向量如图所示为 ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BV%7D%2B2%5Cvec%7BB%7D) , 其中规定向量 ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BN%7D) 是单位向量, 但 ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BV%7D) 不一定是。向量B的长度应为 ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BV%7D%5Ccdot%5Cvec%7BN%7D) , 因为向量 ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BV%7D) 与向量 ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BN%7D) 的方向相反, 这里需要再加上一个负号, 于是有:
 
 ```cpp
-//vec3.h
+//vec3.hpp
 vec3 reflect(const vec3& v, const vec3& n) {
     return v - 2*dot(v,n)*n;
 }
@@ -1475,7 +1475,7 @@ int main() {
 当然这个球越大, 金属看上去就更加模糊(fuzzy, 或者说粗糙)。所以这里引入一个变量来表示模糊的程度(fuzziness)(所以当fuzz=0时不会产生模糊)。如果fuzz, 也就是随机球的半径很大, 光线可能会散射到物体内部去。这时候可以认为物体吸收了光线。
 
 ```cpp
-//material.h
+//material.hpp
 class metal : public material {
     public:
         metal(const vec3& a, double f) : albedo(a), fuzz(f < 1 ? f : 1) {}
@@ -1552,7 +1552,7 @@ class metal : public material {
 根据上述公式, 就能写出计算折射光线 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BR%27%7D) 的函数:
 
 ```cpp
-//vec3.h
+//vec3.hpp
 vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
     auto cos_theta = dot(-uv, n);
     vec3 r_out_parallel =  etai_over_etat * (uv + cos_theta*n);
@@ -1611,7 +1611,7 @@ class dielectric : public material {
 方程无解，认为光线无法发生折射的时候, 发生了反射:
 
 ```cpp
-//material.h
+//material.hpp
 if(etai_over_etat * sin_theta > 1.0) {
     // Must Reflect
     ...
@@ -1635,7 +1635,7 @@ else {
 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos%5Ctheta+%3D+%5Cmathbf%7BR%7D+%5Ccdot+%5Cmathbf%7BN%7D)
 
 ```cpp
-//material.h
+//material.hpp
 double cos_theta = ffmin(dot(-unit_direction, rec.normal), 1.0);
 double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 if(etai_over_etat * sin_theta > 1.0) {
@@ -1651,7 +1651,7 @@ else {
 一个在可以偏折的情况下总是偏折, 其余情况发生反射的绝缘体材质为:
 
 ```cpp
-//material.h
+//material.hpp
 class dielectric : public material {
     public:
         dielectric(double ri) : ref_idx(ri) {}
@@ -1684,7 +1684,7 @@ class dielectric : public material {
 这里的光线衰减率为1——就是不衰减, 玻璃表面不吸收光的能量。使用下面的参数:
 
 ```cpp
-main.cc
+//main.cc
 world.add(make_shared<sphere>(
     vec3(0,0,-1), 0.5, make_shared<lambertian>(vec3(0.1, 0.2, 0.5))));
 
@@ -2063,7 +2063,9 @@ int main() {
 
 得到：
 
-![img](https://pic2.zhimg.com/80/v2-7483e528431ca10622ddd31ce8ebbba9_720w.jpg)最终场景
+![img](https://pic2.zhimg.com/80/v2-7483e528431ca10622ddd31ce8ebbba9_720w.jpg)
+
+最终场景
 
 可能会发现玻璃球没有阴影, 使得他们看上去像漂浮在空中。
 
