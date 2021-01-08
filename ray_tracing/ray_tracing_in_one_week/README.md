@@ -201,7 +201,7 @@ int main() {
 
 
 
-## 4. 光线, 简单摄像机, 以及背景
+## 光线, 简单摄像机, 以及背景
 
 所有的光线追踪器都有个一个ray类, 假定光线的公式为 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bp%7D%28t%29+%3D+%5Cmathbf%7Ba%7D+%2B+t+%5Cvec%7B%5Cmathbf%7Bb%7D%7D) 。
 
@@ -380,7 +380,7 @@ vec3 ray_color(const ray& r) {
 
 
 
-## 6. 面法相与复数物体
+## 面法相与复数物体
 
 为了来给球体着色, 首先来定义一下面法相。面法相应该是一种垂直于交点所在平面的三维向量。关于面法相存在两个设计抉择。首先是是否将其设计为单位向量, 这样对于着色器来说, 所以会说"yes!"但是并没有在代码里这么做, 这部分差异可能会导致一些潜在的bug。所以记住, 这个是个人喜好, 大多数的人喜好使用单位法相。对于球体来说, 朝外的法相是直线与球的交点减去球心:
 
@@ -467,7 +467,11 @@ if (discriminant < 0) {
 
 多个物体（hittable）
 
-hittable类理应有个接受射线为参数的函数, 许多光线追踪器为了便利, 加入了一个区间 ![[公式]](https://www.zhihu.com/equation?tex=t_%7Bmin%7D%3Ct%3Ct_%7Bmax%7D) 来判断相交是否有效。对于一开始的光线来说, 这个t值总是正的, 但加入这部分对代码实现的一些细节有着不错的帮助。现在有个设计上的问题:是否在每次计算求交的时候都要去计算法相?但其实只需要计算离射线原点最近的那个交点的法相就行了, 后面的东西会被遮挡。接下来会给出的代码, 并将一些计算的结果存在一个结构体里, 来看, 这就是那个抽象类:
+hittable类理应有个接受射线为参数的函数, 许多光线追踪器为了便利, 加入了一个区间 ![[公式]](https://www.zhihu.com/equation?tex=t_%7Bmin%7D%3Ct%3Ct_%7Bmax%7D) 来判断相交是否有效。
+
+对于一开始的光线来说, 这个t值总是正的。现在有个设计上的问题: 是否在每次计算求交的时候都要去计算法相?  但其实只需要计算离射线原点最近的那个交点的法相就行了, 后面的东西会被遮挡。
+
+hittable抽象类(计算的结果存在的结构体)
 
 ```cpp
 //hittable.h
@@ -490,7 +494,7 @@ class hittable {
 #endif
 ```
 
-这是继承自它的sphere球体类:
+继承自它的sphere球体类:
 
 ```cpp
 //sphere.h
@@ -541,26 +545,16 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
 #endif
 ```
 
-好了, 让来谈谈第二个关于面法相设计上的问题吧， 那就是面法相的朝向问题。对于现在来说, 如果光线从球体外部击中球体, 那么法相也是朝外的, 与射线的方向相反(不是数学意义上的严格相反, 只是大致逆着)。如果光线从内部射向球面时, 此时的面法相依然朝外, 与射线方向相同。相对的, 也可以总是让法相向量与射线方向相反, 即射线从外部射向球面, 法向量朝外, 射线从内部射向球面, 法向量向着球心。
-
-![img](https://pic4.zhimg.com/80/v2-f3be9d1529ba6a7d923f9c4e3533aba3_720w.jpg)图5: 光线可能射入的方向
-
-在着色前, 需要仔细考虑一下采用上面哪种方式, 这对于双面材质来说至关重要。例如一张双面打印的A4纸, 或者玻璃球这样的同时具有内表面和外表面的物体。
-
-如果决定让法相永远朝外, 那在就得在射入的时候判断是从表面的哪一侧射入的, 可以简单的将光线与法相做点乘来判断。如果法相与光线方向相同, 那就是从内部击中内表面, 如果相反则是从外部击中外表面。【译注: ![[公式]](https://www.zhihu.com/equation?tex=+dot%28a%2Cb%29+%3D+cos%5Ctheta%7Ca%7C%7Cb%7C) 】
-
-```cpp
-if (dot(ray_direction, outward_normal) > 0.0) {
-    // ray is inside the sphere
-    ...
-} else {
-    // ray is outside the sphere
-    ...
-}
-```
 
 
-如果永远让法相与入射方向相反, 就不用去用点乘来判断射入面是内侧还是外侧了, 但相对的, 需要用一个变量储存射入面的信息:
+面法相的朝向问题。
+
+​	对于现在来说, 如果光线从球体外部击中球体, 那么法相也是朝外的, 与射线的方向相反(不是数学意义上的严格相反, 只是大致逆着)。如果光线从内部射向球面时, 此时的面法相依然朝外, 与射线方向相同。相对的, 也可以总是让法相向量与射线方向相反, 即射线从外部射向球面, 法向量朝外, 射线从内部射向球面, 法向量向着球心。
+
+​	在着色前, 需要仔细考虑一下采用哪种方式, 
+
+	1. 如果决定让法相永远朝外, 那在就得在射入的时候判断是从表面的哪一侧射入的, 可以简单的将光线与法相做点乘来判断。如果法相与光线方向相同, 那就是从内部击中内表面, 如果相反则是从外部击中外表面。
+	2. 如果永远让法相与入射方向相反, 不用去用点乘来判断射入面是内侧还是外侧了, 这时需要用一个变量储存射入面的信息:
 
 ```cpp
 bool front_face;
@@ -576,9 +570,7 @@ else {
 }
 ```
 
-其实采取哪种策略, 关键在于想把这部分放在着色阶段还是几何求交的阶段。【译注:反正都要算的, v2.0的时候是在着色阶段判别的, v3.0把它放在了求交阶段】。在本书中的材质类型会比的几何图元类型多, 所以为了有更少的代码量, 会在几何部分先判别射入面是内侧还是外侧。这当然也是一种个人喜好。
-
-在结构体hit_record中加入front_face变量, 接下来还会弄一些动态模糊相关的事情(Book2 chapter1),所以还会加入一个时间变量:
+在结构体hit_record中加入front_face变量
 
 ```cpp
 //hittable.h 加入时间与面朝向
@@ -606,7 +598,7 @@ class hittable {
 #endif
 ```
 
-接下来在求交时加入射入面的判别:
+求交时加入射入面的判别:
 
 ```cpp
 //sphere.h 加入射入面判别
@@ -687,51 +679,15 @@ bool hittable_list::hit(const ray& r, double t_min, double t_max, hit_record& re
 #endif
 ```
 
-## 6.1. 一些C++的新特性
 
-hittable_list类用了两种C++的特性:vector和shared_ptr, 如果并不熟悉C++, 可能会感到有些困惑。
 
-shared_ptr<type>是指向一些已分配内存的类型的指针。每当将它的值赋值给另一个智能指针时, 物体的引用计数器就会+1。当智能指针离开它所在的生存范围(例如代码块或者函数外), 物体的引用计数器就会-1。一旦引用计数器为0, 即没有任何智能指针指向该物体时, 该物体就会被销毁
+## 常用的常数与工具
 
-一般来说, 智能指针首先由一个刚刚新分配好内存的物体来初始化:
+需要在头文件中定义一些常用的常数。目前为止只需要定义无穷。但是先把pi在这里定义好, 之后要用的。对于pi来说并没有什么跨平台的标准定义,  所以自己来定义一下。
 
-```cpp
-shared_ptr<double> double_ptr = make_shared<double>(0.37);
-shared_ptr<vec3>   vec3_ptr   = make_shared<vec3>(1.414214, 2.718281, 1.618034);
-shared_ptr<sphere> sphere_ptr = make_shared<sphere>(vec3(0,0,0), 1.0);
-```
 
-make_shared<thing>(thing_constructor_params ...)为指定的类型分配一段内存, 使用指定的构造函数与参数来创建这个类, 并返回一个智能指针shared_ptr<thing>
 
-使用C++的auto类型关键字, 可以自动推断make_shared<type>返回的智能指针类型, 于是可以把上面的代码简化为:
-
-```cpp
-auto double_ptr = make_shared<double>(0.37);
-auto vec3_ptr   = make_shared<vec3>(1.414214, 2.718281, 1.618034);
-auto sphere_ptr = make_shared<sphere>(vec3(0,0,0), 1.0);
-```
-
-在代码中使用智能指针的目的是为了能让多个几何图元共享一个实例(举个栗子, 一堆不同球体使用同一个纹理材质), 并且这样内存管理比起普通的指针更加的简单方便。
-
-std::shared_ptr在头文件<memory>中
-
-```cpp
-#include<memory>
-```
-
-第二个可能不太熟悉的C++特性是std::vector。这是一个类似数组的结构类型, 可以存储任意指定的类型。在上面的代码中, 将hittable类型的智能指针存入vector中, 随着objects.push_back(object)的调用, object被存入vector的末尾, 同时vector的储存空间会自动增加。
-
-std::vector在头文件<vector>中
-
-```cpp
-#include<vector>
-```
-
-最后, 位于hittable_list.h文件开头部分的using语句告诉编译器, shared_ptr与make_shared是来自std库的。这样在使用它们之前就不用每次都加上前缀std::。
-
-## 6.2. 常用的常数与工具
-
-需要在头文件中定义一些常用的常数。目前为止只需要定义无穷。但是先把pi在这里定义好, 之后要用的。对于pi来说并没有什么跨平台的标准定义【译注: 这就是为什么不使用之前版本中M_PI宏定义的原因】, 所以自己来定义一下。在rtweekend.h中给出了一些未来常用的常数和函数:
+在rtweekend.h中给出了一些未来常用的常数和函数:
 
 ```cpp
 //rtweekend.h
@@ -771,7 +727,7 @@ inline double ffmax(double a, double b) { return a >= b ? a : b; }
 #endif
 ```
 
-以及这是更新后的main函数:
+更新main函数:
 
 ```cpp
 //main.cc
@@ -823,17 +779,29 @@ int main() {
 }
 ```
 
-这样就会得到一张使用法向作为球体颜色值的图片。当想查看模型的特征细节与瑕疵时, 输出面法向作为颜色值不失为一种很好的方法。
 
-![img](https://pic3.zhimg.com/80/v2-c4e02ebc310fa0ab8102bf334c31a21e_720w.jpg)加上地板, 输出法相
 
-## 7. 反走样(抗锯齿)
+得到一张使用法向作为球体颜色值的图片。
 
-真实世界中的摄像机拍摄出来的照片是没有像素状的锯齿的。因为边缘像素是由背景和前景混合而成的。也可以在程序中简单的对每个边缘像素多次采样取平均达到类似的效果。这里不会使用分层采样。尽管自己常常在的程序里使用这种有争议的方法。对某些光线追踪器来说分层采样是很关键的部分, 但是对于写的这个小光线追踪器并不会有什么很大的提升, 只会让代码更加丑陋。会在这里将摄像机类抽象一下, 以便于后续能有一个更酷的摄像机。
+![image-20210109002710831](/Users/code/Library/Application Support/typora-user-images/image-20210109002710831.png)
 
-还需要一个能够返回真随机数的一个随机数生成器。默认来说这个函数应该返回0≤r<1的随机数。注意这个范围取不到1是很重要的。有时候能从这个特性中获得好处。
 
-一个简单的实现方法是, 使用<cstdlib>中的rand()函数。这个函数会返回0到RAND_MAX中的一个任意整数。将下面的一小段代码加到rtweekend.h中, 就能得到想要的随机函数了:
+
+## 抗锯齿
+
+真实世界中的摄像机拍摄出来的照片是没有像素状的锯齿的。
+
+​	因为边缘像素是由背景和前景混合而成的，可以在程序中简单的对每个边缘像素多次采样取平均达到类似的效果。
+
+需要一个能够返回真随机数的一个随机数生成器。
+
+​	默认来说这个函数应该返回0≤r<1的随机数
+
+
+
+使用<cstdlib>中的rand()函数，返回0到RAND_MAX中的一个任意整数。
+
+将下面的一小段代码加到rtweekend.h中, 得到想要的随机函数:
 
 ```cpp
 //rtweekend.h
@@ -851,27 +819,13 @@ inline double random_double(double min, double max) {
 }
 ```
 
-传统C++并没有随机数生成器, 但是新版C++中的<random>头实现了这个功能(某些专家觉得这种方法不太完美)。如果想使用这种方法, 可以参照下面的代码:
+对于给定的像素, 发射多条射线进行多次采样，然后对颜色结果求一个平均值:
 
-```cpp
-//rtweekend.h
-#include <functional>
-#include <random>
+![img](https://pic2.zhimg.com/80/v2-e54c77c97131c90f04a27e5a5de7ec55_720w.jpg)
 
-inline double random_double() {
-    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-    static std::mt19937 generator;
-    static std::function<double()> rand_generator =
-        std::bind(distribution, generator);
-    return rand_generator();
-}
-```
+ 对一个像素进行多次采样
 
-对于给定的像素, 发射多条射线进行多次采样。然后对颜色结果求一个平均值:
-
-![img](https://pic2.zhimg.com/80/v2-e54c77c97131c90f04a27e5a5de7ec55_720w.jpg)图6: 对一个像素进行多次采样
-
-综上, 对的简单的轴对齐摄像机类进行了一次封装:
+简单的轴对齐摄像机类进行了一次封装:
 
 ```cpp
 //camera.h
@@ -902,18 +856,7 @@ class camera {
 #endif
 ```
 
-为了对多重采样的颜色值进行计算, 升级了vec3::write_color()函数。不会在每次发出射线采样时都计算一个0-1之间的颜色值, 而是一次性把所有的颜色都加在一起, 然后最后只需要简单的一除(除以采样点个数)。另外, 给头文件rtweekend.h加入了一个新函数clamp(x,min,max), 用来将x限制在[min,max]区间之中:
-
-```cpp
-//rtweekend.h
-inline double clamp(double x, double min, double max) {
-    if (x < min) return min;
-    if (x > max) return max;
-    return x;
-}
-```
-
-
+为了对多重采样的颜色值进行计算, 升级了vec3::write_color()函数。不会在每次发出射线采样时都计算一个0-1之间的颜色值, 而是一次性把所有的颜色都加在一起, 然后最后只需要简单的除以采样点个数。
 
 ```cpp
 //vec3.h
@@ -934,7 +877,18 @@ void write_color(std::ostream &out, int samples_per_pixel) {
 }
 ```
 
-main函数也发生了变化:
+头文件rtweekend.h加入了一个新函数clamp(x,min,max), 用来将x限制在[min,max]区间之中:
+
+```cpp
+//rtweekend.h
+inline double clamp(double x, double min, double max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
+}
+```
+
+main函数变化:
 
 ```cpp
 //main.cc
@@ -967,9 +921,11 @@ int main() {
 }
 ```
 
-停, 放大放大再放大, 看啊, 每一个像素都是背景和前景的混合:
+
 
 ![img](https://pic2.zhimg.com/80/v2-807248338e5835236f2c884fa9ed4105_720w.jpg)
+
+
 
 加入抗锯齿效果后前背景颜色混合的像素
 
@@ -977,25 +933,25 @@ int main() {
 
 
 
+## 漫反射材质
 
+漫反射材质不仅仅接受其周围环境的光线, 还会在散射时使光线变成自己本身的颜色。
 
-## 8. 漫反射材质
+光线射入漫反射材质后, 其反射方向是随机的。
 
-既然已经有了物体的类和多重采样, 不妨再加入一些逼真的材质吧。先从漫反射材质开始。设计上的问题又来了:是把材质和物体设计成两个类, 这样就可以将材质赋值给物体类的成员变量, 还是说让它们紧密结合,这对于使用几何信息来生成纹理的程序来说是很便利的 。会采取将其分开的做法——实际上大多数的渲染器都是这样做的——但是记得注意的确是有两种设计方法的。
-
-漫反射材质不仅仅接受其周围环境的光线, 还会在散射时使光线变成自己本身的颜色。光线射入漫反射材质后, 其反射方向是随机的。所以如果为下面这两个漫发射的球射入三条光线, 光线都会有不同的反射角度:
+如果为下面这两个漫发射的球射入三条光线, 光线都会有不同的反射角度:
 
 ![img](https://pic2.zhimg.com/80/v2-f61ad9d024071668f27db1fc248abcf5_720w.jpg)
 
-并且大部分的光线都会被吸收, 而不是被反射。表面越暗, 吸收就越有可能发生。使用任意的算法生成随机的反射方向, 就能让其看上去像一个粗糙不平的漫反射材质。这里采用最简单的算法就能得到一个理想的漫反射表面(其实是懒得写lambertian所以用了一个数学上近似的方法)。
 
-(读者Vassillen Chizhov 提供了这个方法, 虽然并不是精确意义上的lambert。会在章节最后提精确的lambertian表达式, 而其并不会很复杂)
 
-好, 现在有两个单位球相切于点p, 这两个球体的球心为 ![[公式]](https://www.zhihu.com/equation?tex=%28p%2B%5Cvec%7BN%7D%29) 和 ![[公式]](https://www.zhihu.com/equation?tex=%28p-%5Cvec%7BN%7D%29) , ![[公式]](https://www.zhihu.com/equation?tex=%5Cvec%7BN%7D) 是球体表面的法向量。球心为 ![[公式]](https://www.zhihu.com/equation?tex=%28p-%5Cvec%7BN%7D%29) 的那个球在表面的内部, 球心为 ![[公式]](https://www.zhihu.com/equation?tex=%28p%2B%5Cvec%7BN%7D%29) 的球在表面的外部。选择和光线原点位于表面同一侧的那个单位球, 并从球中随机选取一点 ![[公式]](https://www.zhihu.com/equation?tex=s) , 向量 ![[公式]](https://www.zhihu.com/equation?tex=%28s-p%29) 就是要求的反射光线的方向:
+并且大部分的光线都会被吸收, 而不是被反射。表面越暗, 吸收就越有可能发生。
 
-![img](https://pic3.zhimg.com/80/v2-45d8ee02fefda11052daf78be9ace252_720w.jpg)图8：生成一条随机的反射光线
+使用任意的算法生成随机的反射方向, 就能让其看上去像一个粗糙不平的漫反射材质。
 
-需要一个算法来生成球体内的随机点。会采用最简单的做法:否定法(rejection method)。首先, 在一个xyz取值范围为-1到+1的单位立方体中选取一个随机点, 如果这个点在球外就重新生成直到该点在球内:
+需要一个算法来生成球体内的随机点。会采用最简单的做法:否定法(rejection method)。
+
+首先, 在一个xyz取值范围为-1到+1的单位立方体中选取一个随机点, 如果这个点在球外就重新生成直到该点在球内:
 
 ```cpp
 //vec3.h
@@ -1011,8 +967,6 @@ class vec3 {
     }
 ```
 
-
-
 ```cpp
 //vec3.h
 vec3 random_in_unit_sphere() {
@@ -1024,7 +978,7 @@ vec3 random_in_unit_sphere() {
 }
 ```
 
-然后使用新的生成随机随机反射方向的函数来更新一下的ray_color()函数:
+更新一下的ray_color()函数（使用新的生成随机反射方向的函数来）:
 
 ```cpp
 //main.cc
@@ -1042,14 +996,21 @@ vec3 ray_color(const ray& r, const hittable& world) {
 }
 ```
 
-这里还有个潜在的问题: 注意ray_color函数是一个递归函数。那么递归终止的条件是什么呢?当它没有击中任何东西。但是, 在某些条件下, 达到这个终止条件的时间会非常长, 长到足够爆了函数栈【译注:想象一下一条光线在一个镜子材质的密封的盒子(并不吸收光线)中反复折射, 永无尽头】。为了避免这种情况的发生, 使用一个变量depth限制递归层数。当递归层数达到限制值时终止递归, 返回黑色:【译注: 可以试试返回纯红(1,0,0), 然后渲染一下, 大致看一下是哪里在不停的发生散射】
+
+
+注意ray_color函数是一个递归函数。
+
+​	那么递归终止的条件是什么呢 ：没有击中任何东西。
+
+在某些条件下, 达到这个终止条件的时间会非常长, 长到足够大于函数栈，为了避免这种情况的发生, 使用一个变量depth限制递归层数。
+
+当递归层数达到限制值时终止递归, 返回黑色:
 
 ```cpp
 //main.cc
 vec3 ray_color(const ray& r, const hittable& world, int depth) {
     hit_record rec;
 
-    // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return vec3(0,0,0);
 
@@ -1088,11 +1049,19 @@ int main() {
 }
 ```
 
-会得到:
+得到:
 
-![img](https://pic3.zhimg.com/80/v2-01259cbd92f891d2db907a773d51e7aa_720w.jpg)第一次渲染出漫反射材质的球体
+![img](https://pic3.zhimg.com/80/v2-01259cbd92f891d2db907a773d51e7aa_720w.jpg)
 
-注意球下面是有影子的。这个图片非常的暗, 但是的球在散射的时候只吸收了一半的能量。如果看不见这个阴影, 别担心, 现在来修复一下。现实世界中的这个球明显是应该更加亮一些的。这是因为所有的看图软件都默认图像已经经过了伽马校正(gamma corrected)。即在图片存入字节之前, 颜色值发生了一次转化。这么做有许多好处, 但这并不是这里所讨论的重点。使用"gamma 2"空间, 就意味着最终的颜色值要加上指数 ![[公式]](https://www.zhihu.com/equation?tex=1%2Fgamma) , 在的例子里就是 ½, 即开平方根:
+
+
+第一次渲染出漫反射材质的球体
+
+注意球下面是有影子的，非常的暗, 球在散射的时候只吸收了一半。
+
+现实世界中的这个球明显是应该更加亮一些的，所有的看图软件都默认图像已经经过了伽马校正(gamma corrected)，即在图片存入字节之前, 颜色值发生了一次转化。
+
+使用"gamma 2"空间, 就意味着最终的颜色值要加上指数 ![[公式]](https://www.zhihu.com/equation?tex=1%2Fgamma) , 在的例子里就是 ½, 即开平方根:
 
 ```cpp
 //vec3.h
@@ -1111,24 +1080,32 @@ void write_color(std::ostream &out, int samples_per_pixel) {
 }
 ```
 
-好了, 现在看上去更灰了, 如所愿:
-
-![img](https://pic4.zhimg.com/80/v2-f0ab33e768ac857087b5e2547f47b8b3_720w.jpg)伽马校正后的漫反射球体
-
-这里还有个不太重要的潜在bug。有些物体反射的光线会在t=0时再次击中自己。然而由于精度问题, 这个值可能是t=-0.000001或者是t=0.0000000001或者任意接近0的浮点数。所以要忽略掉0附近的一部分范围, 防止物体发出的光线再次与自己相交。【译注: 小心自相交问题】
 
 
+![img](https://pic4.zhimg.com/80/v2-f0ab33e768ac857087b5e2547f47b8b3_720w.jpg)
+
+
+
+伽马校正后的漫反射球体
+
+潜在bug：有些物体反射的光线会在t=0时再次击中自己。然而由于精度问题, 这个值可能是t=-0.000001或者是t=0.0000000001或者任意接近0的浮点数。
+
+
+
+要忽略掉0附近的一部分范围, 防止物体发出的光线再次与自己相交：
 
 ```cpp
 //main.cc
 if (world.hit(r, 0.001, infinity, rec)) {
 ```
 
-这样就能避免阴影痤疮(shadow ance)的产生。是滴, 这种现象的确是叫这个名字。
+避免阴影痤疮(shadow ance)的产生。
 
 拒绝法生成的点是单位球体积内的的随机点, 这样生成的向量大概率上会和法线方向相近, 并且极小概率会沿着入射方向反射回去。这个分布律的表达式有一个 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos%5E3+%28%5Cphi%29) 的系数, 其中 ![[公式]](https://www.zhihu.com/equation?tex=%5Cphi) 是反射光线距离法向量的夹角。这样当光线从一个离表面很小的角度射入时, 也会散射到一片很大的区域, 对最终颜色值的影响也会更低。
 
-然而, 事实上的lambertian的分布律并不是这样的, 它的系数是 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos+%28%5Cphi%29) 。真正的lambertian散射后的光线距离法相比较近的概率会更高, 但是分布律会更加均衡。这是因为选取的是单位球面上的点。可以通过在单位球内选取一个随机点, 然后将其单位化来获得该点。【译注: 然而下面的代码却用了极坐标的形式】
+事实上的lambertian的分布律的系数是 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos+%28%5Cphi%29) ，lambertian散射后的光线距离法相比较近的概率会更高, 分布律会更加均衡。
+
+因为选取的是单位球面上的点。可以通过在单位球内选取一个随机点, 然后将其单位化来获得该点。
 
 ```cpp
 //vec3.h
@@ -1140,7 +1117,11 @@ vec3 random_unit_vector() {
 }
 ```
 
-![img](https://pic4.zhimg.com/80/v2-2a37ce5c0bb8e7e3f51cd3f947ce4f8f_720w.jpg)图9: 在球面上生成一个随机的向量
+![img](https://pic4.zhimg.com/80/v2-2a37ce5c0bb8e7e3f51cd3f947ce4f8f_720w.jpg)
+
+
+
+在球面上生成一个随机的向量
 
 使用新函数random_unit_vector()替换现存的random_unit_sphere():
 
@@ -1166,25 +1147,32 @@ vec3 ray_color(const ray& r, const hittable& world, int depth) {
 
 会得到这样的图片, 和之前很相像:
 
-![img](https://pic3.zhimg.com/80/v2-cc4cdd3d687349fa0d472a701f541cfe_720w.jpg)正确的lambertian球体
+![img](https://pic3.zhimg.com/80/v2-cc4cdd3d687349fa0d472a701f541cfe_720w.jpg)
 
-的场景太简单, 区分这两种方法是比较难的。但应该能够注意到视觉上的一些差异:
+
+
+正确的lambertian球体
+
+由于场景太简单, 区分这两种方法是比较难的，但应该能够注意到视觉上的一些差异:
 
 1.阴影部分少了
 2.大球和小球都变亮了
 
 这些变化都是由散射光线的单位规整化引起的, 现在更少的光线会朝着发现方向散射。对于漫发射的物体来说, 他们会变得更亮。因为更多光线朝着摄像机反射。对于阴影部分来说, 更少的光线朝上反射, 所以小球下方的大球区域会变得更加明亮。
 
-这本书很长一段时间都采用的是先前的版本, 直到后来有一天大家发现它其实只是理想lambertian漫发射的近似, 其并不正确。这个错误在本书中留存了那么长时间, 主要是因为:
 
-1.概率分布的数学证明算错了
-2.视觉上来说, 并不能直接看出 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos+%28%5Cphi%29) 的概率分配是所需要的
 
-因为大家日常生活中的物体都是发生了完美的漫反射, 所以很难养成对光照下物体是如何表现的视觉直觉。
+简单来说两种方法都选取了一个随机方向的向量
 
-为了便于大家理解, 简单来说两种方法都选取了一个随机方向的向量, 不过一种是从单位球体内取的, 其长度是随机的, 另一种是从单位球面上取的, 长度固定为单位向量长度。为什么要采取单位球面并不是能很直观的一眼看出。
+​	一种是从单位球体内取的, 其长度是随机的
 
-另一种具有启发性的方法是, 直接从入射点开始选取一个随机的方向, 然后再判断是否在法向量所在的那个半球。在使用lambertian漫发射模型前, 早期的光线追踪论文中大部分使用的都是这个方法:
+​	另一种是从单位球面上取的, 长度固定为单位向量长度
+
+
+
+另一种具有启发性的方法是, 直接从入射点开始选取一个随机的方向, 然后再判断是否在法向量所在的那个半球。
+
+在使用lambertian漫发射模型前, 早期的光线追踪论文中大部分使用的都是这个方法:
 
 ```cpp
 //vec3.h
@@ -1221,11 +1209,13 @@ vec3 ray_color(const ray& r, const hittable& world, int depth) {
 
 会得到如下的图片:
 
-![img](https://pic4.zhimg.com/80/v2-733c6ea8353952f6f50e33a1990c8a67_720w.jpg)使用半球面向量渲染漫反射球体
+![img](https://pic4.zhimg.com/80/v2-733c6ea8353952f6f50e33a1990c8a67_720w.jpg)
 
-的场景会随着本书的深入会变得越来越复杂。这里鼓励大家在之后都试一下这几种不同的漫反射渲染法。大多数场景都会有许多的漫反射材质。可以从中培养出对这几种方法的敏感程度。
+使用半球面向量渲染漫反射球体
 
-## 9. 金属材质
+
+
+## 材质
 
 如果想让不同的物体能拥有不同的材质, 又面临着一个设计上的抉择。可以设计一个宇宙无敌大材质, 这个材质里面有数不胜数的参数和材质类型可供选择。这样其实也不错, 但还可以设计并封装一个抽象的材质类。反正喜欢后面一种, 对于的程序来说, 一个材质类应该封装两个功能进去:
 
@@ -1244,7 +1234,9 @@ class material {
 };
 ```
 
-在函数中使用hit_record作为传入参数, 就可以不用传入一大堆变量了。当然如果想传一堆变量进去的话也行。这也是个人喜好。当然物体和材质还要能够联系在一起。在C++中只要告诉编译器, 在`hit_record`里面存了个材质的指针。
+在函数中使用hit_record作为传入参数, 就可以不用传入一大堆变量了。当然如果想传一堆变量进去的话也行。
+
+物体和材质还要能够联系在一起。在C++中只要告诉编译器, 在`hit_record`里面存了个材质的指针。
 
 ```cpp
 //hittable.h
@@ -1277,9 +1269,11 @@ class hittable {
 #endif
 ```
 
-光线会如何与表面交互是由具体的材质所决定的。hit_record在设计上就是为了把一堆要传的参数给打包在了一起。当光线射入一个表面(比如一个球体), hit_record中的材质指针会被球体的材质指针所赋值, 而球体的材质指针是在main()函数中构造时传入的。当color()函数获取到hit_record时, 他可以找到这个材质的指针, 然后由材质的函数来决定光线是否发生散射, 怎么散射。
+光线会如何与表面交互是由具体的材质所决定的。
 
-所以必须在球体的构造函数和变量区域中加入材质指针, 以便之后传给`hit_record`。见下面的代码:
+hit_record在设计上就是为了把一堆要传的参数给打包在了一起。当光线射入一个表面(比如一个球体), hit_record中的材质指针会被球体的材质指针所赋值, 而球体的材质指针是在main()函数中构造时传入的。当color()函数获取到hit_record时, 可以找到这个材质的指针, 然后由材质的函数来决定光线是否发生散射, 怎么散射。
+
+必须在球体的构造函数和变量区域中加入材质指针, 以便之后传给`hit_record`。
 
 ```cpp
 class sphere: public hittable {
@@ -1328,7 +1322,17 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
 }
 ```
 
-对于之前写过的Lambertian(漫反射)材质来说, 这里有两种理解方法, 要么是光线永远发生散射, 每次散射衰减至R, 要么是光线并不衰减, 转而物体吸收(1-R)的光线。也可以当成是这两种的结合。于是可以写出Lambertian的材质类:
+对于之前写过的Lambertian(漫反射)材质来说, 这里有3种理解方法, 
+
+ 1. 光线永远发生散射, 每次散射衰减至R
+
+ 2.  光线并不衰减, 转而物体吸收(1-R)的光线
+
+ 3. 两种的结合
+
+    
+
+可以写出Lambertian的材质类:
 
 ```cpp
 //material.h
@@ -1350,9 +1354,9 @@ class lambertian : public material {
 };
 ```
 
-注意也可以让光线根据一定的概率p发生散射【译注: 若判断没有散射, 光线直接消失】, 并使光线的衰减率(代码中的attenuation)为 ![[公式]](https://www.zhihu.com/equation?tex=albedo%2Fp) 。随的喜好来。
+也可以让光线根据一定的概率p发生散射并使光线的衰减率(代码中的attenuation)为 ![[公式]](https://www.zhihu.com/equation?tex=albedo%2Fp) 
 
-对于光滑的金属材质来说, 光线是不会像漫反射那样随机散射的, 而是产生反射。关键是:对于一个金属状的镜子, 光线具体是怎么反射的呢?向量数学是的好朋友:
+对于光滑的金属材质来说, 光线是不会像漫反射那样随机散射的, 而是产生反射
 
 
 
@@ -1391,7 +1395,7 @@ class metal : public material {
 };
 ```
 
-还需要修改一下color函数:
+修改一下color:
 
 ```cpp
 //main.cc
@@ -1416,7 +1420,7 @@ vec3 ray_color(const ray& r, const hittable& world, int depth) {
 }
 ```
 
-现在给场景加入一些金属球:
+场景加入一些金属球:
 
 ```cpp
 //main.cc
@@ -1458,11 +1462,15 @@ int main() {
 }
 ```
 
-就能得到这样的图片:
+得到:
 
-![img](https://pic1.zhimg.com/80/v2-02f0718b49ea2f298ca637e70f1e2ae4_720w.jpg)闪耀☆金属球
+![img](https://pic1.zhimg.com/80/v2-02f0718b49ea2f298ca637e70f1e2ae4_720w.jpg)
 
-还可以给反射方向加入一点点随机性, 只要在算出反射向量后, 在其终点为球心的球内随机选取一个点作为最终的终点:
+金属球
+
+
+
+给反射方向加入一点点随机性, 只要在算出反射向量后, 在其终点为球心的球内随机选取一个点作为最终的终点:
 
 当然这个球越大, 金属看上去就更加模糊(fuzzy, 或者说粗糙)。所以这里引入一个变量来表示模糊的程度(fuzziness)(所以当fuzz=0时不会产生模糊)。如果fuzz, 也就是随机球的半径很大, 光线可能会散射到物体内部去。这时候可以认为物体吸收了光线。
 
@@ -1489,9 +1497,13 @@ class metal : public material {
 
 可以将模糊值设置为0.3和1.0, 图片会变成这样:
 
-![img](https://pic4.zhimg.com/80/v2-e362c4148c81abe70ebefa2d089c3eef_720w.jpg)模糊的金属
+![img](https://pic4.zhimg.com/80/v2-e362c4148c81abe70ebefa2d089c3eef_720w.jpg)
 
-## 10. 绝缘体材质
+模糊的金属
+
+
+
+## 折射
 
 透明的材料, 例如水, 玻璃, 和钻石都是绝缘体。当光线击中这类材料时, 一条光线会分成两条, 一条发生反射, 一条发生折射。会采取这样的策略: 每次光线与物体相交时, 要么反射要么折射, 一次只发生一种情况,随机选取。反正最后采样次数多, 会给这些结果取个平均值。
 
@@ -1507,7 +1519,9 @@ class metal : public material {
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Ctheta) 与 ![[公式]](https://www.zhihu.com/equation?tex=%5Ctheta%27) 是入射光线与折射光线距离法相的夹角, ![[公式]](https://www.zhihu.com/equation?tex=%5Ceta) 与 ![[公式]](https://www.zhihu.com/equation?tex=%5Ceta%27) (读作eta和eta prime)是介质的折射率(规定空气为1.0, 玻璃为1.3-1.7,钻石为2.4), 如图:
 
-![img](https://pic1.zhimg.com/80/v2-4f08d1085c6bc318a23e135512b6def0_720w.jpg)折射光线示意图
+![img](https://pic1.zhimg.com/80/v2-4f08d1085c6bc318a23e135512b6def0_720w.jpg)
+
+折射光线示意图
 
 为了解出折射光线的方向, 需要解出 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta) :
 
@@ -1517,23 +1531,21 @@ class metal : public material {
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BR%27%7D+%3D+%5Cmathbf%7BR%27%7D_%7B%5Cparallel%7D+%2B+%5Cmathbf%7BR%27%7D_%7B%5Cbot%7D+)
 
-如果要解出这两个向量, 有:
+有:
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BR%27%7D_%7B%5Cparallel%7D+%3D+%5Cfrac%7B%5Ceta%7D%7B%5Ceta%27%7D+%28%5Cmathbf%7BR%7D+%2B+%5Ccos%5Ctheta+%5Cmathbf%7BN%7D%29)
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BR%27%7D_%7B%5Cbot%7D+%3D+-%5Csqrt%7B1+-+%7C%5Cmathbf%7BR%27%7D_%7B%5Cparallel%7D%7C%5E2%7D+%5Cmathbf%7BN%7D+)
 
-可以自己推导,证明。这里先直接拿来当结论用了。这本书有些别的地方也是, 并不需要完全会证明。【译注: 自己推推也没坏处】
-
-然后来解 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos%5Ctheta) , 下面是著名的点乘的公式定义:
+再解 ![[公式]](https://www.zhihu.com/equation?tex=%5Ccos%5Ctheta) , 
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BA%7D+%5Ccdot+%5Cmathbf%7BB%7D+%3D+%7C%5Cmathbf%7BA%7D%7C+%7C%5Cmathbf%7BB%7D%7C+%5Ccos%5Ctheta)
 
-如果将 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BA%7D) 与 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BB%7D) 归一化为单位向量:
+将 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BA%7D) 与 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BB%7D) 归一化为单位向量:
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BA%7D+%5Ccdot+%5Cmathbf%7BB%7D+%3D+%5Ccos%5Ctheta+)
 
-于是可以这样表达垂直的那个向量:
+表达垂直的那个向量:
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Cmathbf%7BR%27%7D_%7B%5Cparallel%7D+%3D+%5Cfrac%7B%5Ceta%7D%7B%5Ceta%27%7D+%28%5Cmathbf%7BR%7D+%2B+%28%5Cmathbf%7B-R%7D+%5Ccdot+%5Cmathbf%7BN%7D%29+%5Cmathbf%7BN%7D%29)
 
@@ -1549,10 +1561,10 @@ vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
 }
 ```
 
-一个只会发生折射的绝缘体材质为:
+发生折射的绝缘体材质为:
 
 ```cpp
-//material.h
+//material.hpp
 class dielectric : public material {
     public:
         dielectric(double ri) : ref_idx(ri) {}
@@ -1578,9 +1590,13 @@ class dielectric : public material {
 };
 ```
 
-![img](https://pic4.zhimg.com/80/v2-368925cc729af1d7d580d5b92fc8f2e3_720w.jpg)只发生折射的玻璃材质
+![img](https://pic4.zhimg.com/80/v2-368925cc729af1d7d580d5b92fc8f2e3_720w.jpg)
 
-现在看上去图好像不太对, 这是因为当光线从高折射律介质射入低折射率介质时, 对于上述的Snell方程可能没有实解【 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta%3E1) 】。这时候就不会发生折射, 所以就会出现许多小黑点。回头看一下snell法则的式子:
+只发生折射的玻璃材质
+
+
+
+当光线从高折射律介质射入低折射率介质时, 对于上述的Snell方程可能没有实解【 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta%3E1) 】。这时候就不会发生折射, 所以就会出现许多小黑点。回头看一下snell法则的式子:
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta%27+%3D+%5Cfrac%7B%5Ceta%7D%7B%5Ceta%27%7D+%5Ccdot+%5Csin%5Ctheta)
 
@@ -1588,11 +1604,11 @@ class dielectric : public material {
 
 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta%27+%3D+%5Cfrac%7B1.5%7D%7B1.0%7D+%5Ccdot+%5Csin%5Ctheta)
 
-又因为 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta%27) 是不可能比1大的,所以一旦这种情况发生了:
+又因为 ![[公式]](https://www.zhihu.com/equation?tex=%5Csin%5Ctheta%27) 是不可能比1大的,一旦这种情况发生:
 
 ![[公式]](https://www.zhihu.com/equation?tex=+%5Cfrac%7B1.5%7D%7B1.0%7D+%5Ccdot+%5Csin%5Ctheta+%3E+1.0+)
 
-那就完蛋了, 方程无解了。所以认为光线无法发生折射的时候, 他发生了反射:
+方程无解，认为光线无法发生折射的时候, 发生了反射:
 
 ```cpp
 //material.h
@@ -1606,7 +1622,9 @@ else {
 }
 ```
 
-这里所有的光线都不发生折射, 转而发生了反射。因为这种情况常常在实心物体的内部发生, 所以称这种情况被称为"全内反射"。这也当浸入水中时, 发现水与空气的交界处看上去像一面镜子的原因。
+
+
+常常在实心物体的内部发生, 所以称这种情况被称为"全内反射"。这也当浸入水中时, 发现水与空气的交界处看上去像一面镜子的原因。
 
 可以用三角函数解出sin_theta
 
@@ -1663,7 +1681,7 @@ class dielectric : public material {
 };
 ```
 
-这里的光线衰减率为1——就是不衰减, 玻璃表面不吸收光的能量。如果使用下面的参数:
+这里的光线衰减率为1——就是不衰减, 玻璃表面不吸收光的能量。使用下面的参数:
 
 ```cpp
 main.cc
@@ -1677,11 +1695,13 @@ world.add(make_shared<sphere>(vec3(1,0,-1), 0.5, make_shared<metal>(vec3(0.8, 0.
 world.add(make_shared<sphere>(vec3(-1,0,-1), 0.5, make_shared<dielectric>(1.5)));
 ```
 
-会得到:
+得到:
 
 ![img](https://pic2.zhimg.com/80/v2-7484d6b5ddb4744f741747ac725e7749_720w.jpg)
 
-现实世界中的玻璃, 发生折射的概率会随着入射角而改变——从一个很狭窄的角度去看玻璃窗, 它会变成一面镜子。这个式子又丑又长, 好在有个数学上近似的等式, 它是由Christophe Schlick提出的:
+现实世界中的玻璃, 发生折射的概率会随着入射角而改变——从一个很狭窄的角度去看玻璃窗, 它会变成一面镜子。
+
+用由Christophe Schlick提出的式子化简:
 
 ```cpp
 double schlick(double cosine, double ref_idx) {
@@ -1691,10 +1711,10 @@ double schlick(double cosine, double ref_idx) {
 }
 ```
 
-下面就是完整版的玻璃材质:
+完整的材质代码:
 
 ```cpp
-//material.h
+//material.hpp
 class dielectric : public material {
     public:
         dielectric(double ri) : ref_idx(ri) {}
@@ -1730,7 +1750,9 @@ class dielectric : public material {
 };
 ```
 
-这里有个简单又好用的trick, 如果将球的半径设为负值, 形状看上去并没什么变化, 但是法相全都翻转到内部去了。所以就可以用这个特性来做出一个通透的玻璃球:【把一个小球套在大球里, 光线发生两次折射, 于是负负得正, 上下不会颠倒】
+
+
+将球的半径设为负值, 形状看上去并没变化, 法相翻转到内部，用这个特性来做出一个通透的玻璃球:
 
 ```cpp
 world.add(make_shared<sphere>(vec3(0,0,-1), 0.5, make_shared<lambertian>(vec3(0.1, 0.2, 0.5))));
@@ -1741,22 +1763,34 @@ world.add(make_shared<sphere>(vec3(-1,0,-1), 0.5, make_shared<dielectric>(1.5)))
 world.add(make_shared<sphere>(vec3(-1,0,-1), -0.45, make_shared<dielectric>(1.5)));
 ```
 
-就有:
 
-![img](https://pic1.zhimg.com/80/v2-1c249bd477ba8b2aeb5f49d845486fbc_720w.jpg)一个通透的玻璃球
 
-## 11. 可自定义位置的摄像机
+![img](https://pic1.zhimg.com/80/v2-1c249bd477ba8b2aeb5f49d845486fbc_720w.jpg)
 
-摄像机总是和绝缘体一样难以debug。所以总是一步步搭建的摄像机类。首先, 使摄像机能调整其视野范围(field of view, fov)。fov是的视角。因为的图片不是方的, 所以垂直和水平的fov值是不同的。总是使用垂直方向的fov。并且总是使用角度制来传参, 在构造函数中再将其转化为弧度——这也是的个人喜好。
+一个通透的玻璃球
 
-首先让射线从原点射向 ![[公式]](https://www.zhihu.com/equation?tex=z%3D-1) 平面。当然也可以让其射向 ![[公式]](https://www.zhihu.com/equation?tex=z%3D-2) 的平面,或者其他的什么值都行, 反正h和这个距离d是成比例的。
 
-![img](https://pic1.zhimg.com/80/v2-d8f93c297ec72b9e072535b4f6dcb9c8_720w.jpg)摄像机示意图
 
-显然, ![[公式]](https://www.zhihu.com/equation?tex=h+%3D+%5Ctan%28%5Cfrac%7B%5Ctheta%7D%7B2%7D%29) 。的摄像机类现在变成:
+## 可自定义位置的摄像机
+
+摄像机总是和绝缘体一样难以debug，所以要总是一步步搭建的摄像机类。
+
+首先, 使摄像机能调整其视野范围(field of view, fov)。
+
+​	fov是的视角。
+
+图片不是方的, 所以垂直和水平的fov值是不同的。总是使用垂直方向的fov，并且总是使用角度制来传参, 在构造函数中再将其转化为弧度
+
+
+
+![img](https://pic1.zhimg.com/80/v2-d8f93c297ec72b9e072535b4f6dcb9c8_720w.jpg)
+
+摄像机示意图
+
+![[公式]](https://www.zhihu.com/equation?tex=h+%3D+%5Ctan%28%5Cfrac%7B%5Ctheta%7D%7B2%7D%29) 的摄像机类:
 
 ```cpp
-//camera.h
+//camera.hpp
 class camera {
     public:
         camera(
@@ -1787,7 +1821,7 @@ class camera {
 };
 ```
 
-当使用一个cam(90, double(image_width)/image_height)的摄像机去拍下面的球:
+使用一个cam(90, double(image_width)/image_height)的摄像机 拍下面的球:
 
 ```cpp
 auto R = cos(pi/4);
@@ -1796,21 +1830,25 @@ world.add(make_shared<sphere>(vec3(-R,0,-1), R, make_shared<lambertian>(vec3(0, 
 world.add(make_shared<sphere>(vec3( R,0,-1), R, make_shared<lambertian>(vec3(1, 0, 0))));
 ```
 
-会得到:
+得到:
 
-![img](https://pic4.zhimg.com/80/v2-a5ee444b1b746b41d932c4fc403d6ee3_720w.jpg)一个90°的广角镜头
+![img](https://pic4.zhimg.com/80/v2-a5ee444b1b746b41d932c4fc403d6ee3_720w.jpg)
 
-为了能将的摄像机设置在任意位置, 先来给这个位置点起个名字。管摄像机所在的这个位置叫做 lookfrom, 看向的点叫做lookat(如果不想用世界坐标下的点, 想用向量来表示这个方向的话也完全ok)。
+一个90°的广角镜头
 
-还需要一个变量去描述摄像机的倾斜程度, 或者说摄像机绕着轴lookfrom - lookat旋转的角度【想象下图中红色平面绕这个轴旋转】。就好比站直了, 但是的头还是可以左右转动。为了去描述这个倾斜程度, 需要一个向量来指定摄像机坐标系的正上方方向(up vector)。这里注意:这个向量就在视线方向正交投影过来的那个平面上:
 
-![img](https://pic3.zhimg.com/80/v2-aade90f2e3cab80e0d37eb824e87d602_720w.jpg)摄像机的视线方向
 
-可以使用任意的方向向量, 将其投影到上图的平面中来获得摄像机的up vector。这里给他起名叫vup向量。经过一系列的点乘操作, 会有完整的u,v,w三个向量来描述摄像机的旋向【这里要结合着代码看与下面的图片看】。
 
-![img](https://pic4.zhimg.com/80/v2-c981ba8338f9688cc36c7f0e4a8861eb_720w.jpg)vup
 
-注意vup, v, w处于同一平面内。和先前的摄像机面对着-Z方向一样, 修改后的任意视角摄像机面对着-w方向。记得使用世界坐标系的上方向向量(0,1,0)(不是一定要用这个向量)指定vup。这样会比较方便, 并且的摄像机镜头会保持水平。如果想试试那些奇怪的摄像角度, 可以放心大胆的传入别的值。
+摄像机所在的位置叫 lookfrom, 看向的点叫lookat，需要一个变量去描述摄像机的倾斜程度, 或者说摄像机绕着轴lookfrom - lookat旋转的角度
+
+可以使用任意的方向向量, 将其投影到上图的平面中来获得摄像机的up vector（vup向量）。
+
+经过一系列的点乘操作, 会有完整的u,v,w三个向量来描述摄像机的旋向vup。vup, v, w处于同一平面内。和先前的摄像机面对着-Z方向一样, 修改后的任意视角摄像机面对着-w方向。
+
+
+
+使用世界坐标系的上方向向量(0,1,0)指定vup
 
 ```cpp
 class camera {
@@ -1848,7 +1886,7 @@ class camera {
 };
 ```
 
-现在就可以改变的视角了:
+可以改变的视角:
 
 ```cpp
 //main.cc
@@ -1861,32 +1899,26 @@ camera cam(vec3(-2,2,1), vec3(0,0,-1), vup, 90, aspect_ratio);
 
 
 
-![img](https://pic4.zhimg.com/80/v2-3a76513e86c48fc03887ee41abb03b53_720w.jpg)从远处看
+![img](https://pic4.zhimg.com/80/v2-3a76513e86c48fc03887ee41abb03b53_720w.jpg)
 
-然后在改变一下fov:【这里缩小了fov】
+从远处看
 
-![img](https://pic1.zhimg.com/80/v2-3b1f9d7c41cfdf7c32c4452f82e80d48_720w.jpg)放大看
+改变一下fov:
 
-## 12. 散焦模糊
+![img](https://pic1.zhimg.com/80/v2-3b1f9d7c41cfdf7c32c4452f82e80d48_720w.jpg)
 
-终于到了最后的特性了: 散焦模糊(defocus blur)。基本上所有的摄影师都它叫景深(depth of field)。所以和朋友聊天的时候可别提什么defocus blur啊。
+放大看
+
+## 散焦模糊
 
 现实世界中的摄像机产生对焦模糊的原因是因为他们需要一个很大的孔, 而不是一个针眼大小的小孔来聚集光线。这会导致所有的东西都被散焦了。但如果在孔内加入一块透镜, 在一段距离内的所有物体都会被对焦。可以这样来想象透镜:所有的光线从同一点分散射出, 击中透镜后又聚焦在图像传感器上的一个点上。
 
-在机械相机中, 物体在哪里被聚焦是由透镜距离成像平面与聚焦平面这两个平面的距离所决定的。当改变对焦设置时, 机械相机中的这个透镜位置就会发生改变(手机上的摄像头也是这个原理, 只不过透镜不动, 改成了成像传感器动)。快门光圈(aperture)是一个孔, 它控制这块透镜应该多大比较好。如果需要更多的光线, 的这个快门光圈就大一点, 景深也会随之加大。对于一个虚拟的摄像机来说, 只需要一个传感器就够了。所以只需要传入快门光圈的大小就行【即透镜大小】。
-
-现实世界中的摄像机的透镜组是很复杂的。但对于写代码来说, 只需要模拟上述的顺序: 图像传感器, 透镜, 快门, 然后射出光线, 最后记得翻转图片(进过透镜成像会被上下翻转)。图形学中人们常常使用一块薄片透镜近似模拟:
-
-![img](https://pic3.zhimg.com/80/v2-08cf2fde8d40da8c84f80f9fec833a0e_720w.jpg)摄像机透镜模型
-
-但是根本不用模拟任何摄像机内部的东西, 对于渲染摄像机外的物体来说, 这些都没必要。只要从一个虚拟的透镜范围中发射光线到的摄像机平面就能模拟了,这个透镜与平面的距离成为焦距(focus_dist)
-
-![img](https://pic3.zhimg.com/80/v2-5d7653d4521c1fff2fde0d4195a0caaa_720w.jpg)摄像机平面
+​	现实世界中的摄像机的透镜组是很复杂的。但对于写代码来说, 只需要模拟上述的顺序: 图像传感器, 透镜, 快门, 然后射出光线, 最后翻转图片(进过透镜成像会被上下翻转)。只要从一个虚拟的透镜范围中发射光线到的摄像机平面就能模拟了,这个透镜与平面的距离成为焦(focus_dist)
 
 之前所有的光线都是从lookfrom发出的, 但现在加入了散焦模糊, 所有光线都从内部的一个虚拟透镜发出, 经过lookfrom点, 这个透镜的半径越大, 图像就越模糊。可以认为之前的摄像机, 这个半径为0。
 
 ```cpp
-//vec3.h 从一个单位小圆盘射出光线
+//vec3.hpp 从一个单位小圆盘射出光线
 vec3 random_in_unit_disk() {
     while (true) {
         auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
@@ -1896,7 +1928,7 @@ vec3 random_in_unit_disk() {
 }
 ```
 
-下面给出完整的camera类
+完整的camera类
 
 ```cpp
 class camera {
@@ -1945,7 +1977,7 @@ class camera {
 };
 ```
 
-使用一个大大的快门光圈:
+使用一个快门光圈:
 
 ```cpp
 //main.cc
@@ -1962,11 +1994,13 @@ camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
 就有:
 
-![img](https://pic3.zhimg.com/80/v2-8d5daba641a0c74f8af90cd9b47f9e42_720w.jpg)加入景深效果
+![img](https://pic3.zhimg.com/80/v2-8d5daba641a0c74f8af90cd9b47f9e42_720w.jpg)
 
-## 13. 接下来学什么？
+加入景深效果
 
-首先把书的封面图——许多许多的随机球渲染出来:
+## 
+
+总结：
 
 ```cpp
 //main.cc
@@ -2027,24 +2061,28 @@ int main() {
 }
 ```
 
-会得到:
+得到：
 
 ![img](https://pic2.zhimg.com/80/v2-7483e528431ca10622ddd31ce8ebbba9_720w.jpg)最终场景
 
-可能会发现玻璃球没有阴影, 使得他们看上去像漂浮在空中似得。这不是bug(在现实世界中很少有机会见到真正的玻璃球, 它们看起来的确就是这样的)。玻璃球下的那个作为地板的大球仍然能被那么多光线击中, 因为天空不会阻挡光线, 而是重新排序？？？【the sky is re-ordered rather than blocked.这怎么翻啊？】。
+可能会发现玻璃球没有阴影, 使得他们看上去像漂浮在空中。
 
-现在拥有一个coooool毙了的光线追踪器了! 那接下来该何去何从呢?【标*为[下本书](https://link.zhihu.com/?target=https%3A//oxine.github.io/Graphic/Ray-tracing-the-next-week/)中的内容】
+这不是bug(在现实世界中很少有机会见到真正的玻璃球, 它们看起来的确就是这样的)。
 
-1.光照。可以使用阴影光线来显式实现这部分, 也可以使用产生光线的材质来隐式实现*。
 
-2.偏移散射光线, 然后降低这些光线的权重来消除偏移。这两种都行。硬要说的话, 偏向后者一点点。【猜这句话是在说消除自相交所导致的阴影 即Shadow Ance, 如果有人知道这是在说什么请教教吧！】
 
-3.加入三角形。大部分模型都是三角网格。模型的IO部分是最恶心的, 基本上所有人都不想自己写, 都去找别人的代码用。
+# 下阶段目标：
 
-4.表面纹理*。这可以让像贴墙纸一样把图片贴到物体上去。实现起来也很简单。
+1.光照。可以使用阴影光线来显式实现这部分, 也可以使用产生光线的材质来隐式实现。
 
-5.固体纹理*。可以参见Ken Perlin的在线代码, Andrew Kensler的blog中也有关于这部分的信息。
+2.偏移散射光线, 然后降低这些光线的权重来消除偏移。
 
-6.体积体(volumes 即雾等)*与其他介质。很Cool, 但是会改变的代码构筑。喜欢把体积体也设计成hittable的子类, 根据其密度来随机决定光线是否与其相交。使用这个方法, 的渲染器甚至不用知道渲的是体积体就渲出来了。
+3.加入三角形。大部分模型都是三角网格。
 
-7.并行优化。使用不同的随机种子, 把的代码复制上N份跑在N个核心上,然后再求平均值。可以分层来完成这部分工作, 比如分成N/2对, 每次平均求出N/4的图片, 然后在对这些对之间求平均值。这应该用不了多少代码【[试试CUDA吧](https://link.zhihu.com/?target=https%3A//devblogs.nvidia.com/accelerated-ray-tracing-cuda/)】。
+4.表面纹理。贴墙纸一样把图片贴到物体上去。
+
+5.固体纹理。
+
+6.体积体(volumes 即雾等）与其他介质。
+
+7.并行优化。
